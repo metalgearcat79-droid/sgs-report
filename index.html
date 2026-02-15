@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGS Management | WanoLog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&family=M+PLUS+1+Code:wght@300;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #f7f6f5;
+            color: #1e293b;
+            font-family: 'Source Code Pro', 'M PLUS 1 Code', monospace;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sidebar {
+            background-color: #517174;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 0px;
+            box-shadow: 0 4px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .nav-link {
+            font-family: 'Source Code Pro', 'M PLUS 1 Code', monospace !important;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link span {
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #E2C9C8;
+            color: #ffffff;
+        }
+
+        .stat-label {
+            font-family: 'M PLUS 1 Code', monospace;
+            font-size: 0.75rem;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: #94a3b8;
+        }
+
+        .stat-value {
+            font-family: 'Source Code Pro', monospace !important;
+            font-weight: 600;
+            line-height: 1;
+            color: #1e293b;
+        }
+
+        /* スクロールバーのカスタマイズ */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+
+            /* 印刷時にサイドメニューや操作ボタンを隠す */
+            nav,
+            .nav-link,
+            button,
+            .no-print {
+                display: none !important;
+            }
+
+            /* メインコンテンツを左端から全幅で表示 */
+            main,
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+
+<body class="flex">
+    <aside class="w-60 sidebar hidden lg:flex flex-col bg-[#223943]">
+        <div class="p-8 text-lg tracking-tighter text-white border-b border-white/5">
+            SGS Daily Report
+        </div>
+        <nav class="flex-1 mt-4 px-0 space-y-0">
+
+            <a href="#" onclick="showSection('dashboard-section')"
+                class="nav-link active flex items-center gap-3 px-6 py-4 text-slate-400 hover:bg-[#517174] hover:text-white transition-all border-l-4 border-transparent hover:border-[#E2C9C8] group">
+                <i
+                    class="fa-solid fa-chart-line w-5 text-center group-hover:scale-110 group-hover:rotate-3 transition-transform"></i>
+                <span class="font-bold text-sm tracking-widest uppercase">Dash Board</span>
+            </a>
+
+            <a href="#" onclick="showSection('daily-report-section')"
+                class="nav-link flex items-center gap-3 px-6 py-4 text-slate-400 hover:bg-[#517174] hover:text-white transition-all border-l-4 border-transparent hover:border-[#E2C9C8] group">
+                <i
+                    class="fa-solid fa-file-pen w-5 text-center group-hover:scale-110 group-hover:-rotate-6 transition-transform"></i>
+                <span class="font-bold text-sm tracking-widest uppercase">日報作成</span>
+            </a>
+
+            <a href="#" onclick="showSection('export-page-section')"
+                class="nav-link flex items-center gap-3 px-6 py-4 text-slate-400 hover:bg-[#517174] hover:text-white transition-all border-l-4 border-transparent hover:border-[#E2C9C8] group">
+                <i class="fa-solid fa-server w-5 text-center group-hover:rotate-12 transition-transform"></i>
+                <span class="font-bold text-sm tracking-widest uppercase">Data Center</span>
+            </a>
+
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
+
+        <div id="dashboard-section" class="space-y-6">
+
+            <div class="card h-14 flex-row items-stretch shadow-xl p-0 overflow-hidden font-source-code">
+                <div
+                    class="bg-[#BBC6BB] flex items-center justify-center px-2 md:px-4 border-r border-slate-100 w-[60px] md:w-[200px] flex-shrink-0">
+                    <span
+                        class="text-[10px] md:text-[12px] font-black text-white uppercase tracking-[0.1em] text-center leading-none">
+                        <span class="md:hidden">W.<br>F.</span>
+                        <span class="hidden md:inline">Weather Forecast</span>
+                    </span>
+                </div>
+                <div id="weather-forecast" class="flex-1 grid grid-cols-5 h-full text-[10px] md:text-[12px] font-bold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div
+                    class="card p-4 border-t-4 border-[#E8D6C8] min-h-[120px] flex flex-col items-center justify-between">
+                    <div class="w-full flex flex-col items-center justify-between h-full">
+                        <span class="stat-label text-[#223943] text-[11px] font-bold tracking-wider">製造個数</span>
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Today</span>
+                                <div id="today-production" class="stat-value text-3xl md:text-5xl text-[#223943]">0
+                                </div>
+                            </div>
+                            <div class="hidden sm:block h-8 w-[1px] bg-slate-100 self-center"></div>
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Total</span>
+                                <div id="total-production" class="stat-value text-xl md:text-3xl text-slate-400">0</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto border-t border-slate-50 pt-2 flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">SGS Production
+                                Line</span>
+                            <i class="fa-solid fa-industry text-[10px] text-slate-200"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="card p-4 border-t-4 border-[#E8D6C8] min-h-[120px] flex flex-col items-center justify-between">
+                    <div class="w-full flex flex-col items-center justify-between h-full">
+                        <span
+                            class="stat-label text-[#223943] text-[11px] font-bold tracking-wider">フレコン使用数(ロス含む)</span>
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Today</span>
+                                <div id="today-bags" class="stat-value text-3xl md:text-5xl text-red-600">0</div>
+                            </div>
+                            <div class="hidden sm:block h-8 w-[1px] bg-slate-100 self-center"></div>
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Total</span>
+                                <div id="total-bags" class="stat-value text-xl md:text-3xl text-slate-400">0</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto border-t border-slate-50 pt-2 flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Stock
+                                Control</span>
+                            <i class="fa-solid fa-boxes-stacked text-[10px] text-slate-200"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="card p-4 border-t-4 border-[#E8D6C8] min-h-[120px] flex flex-col items-center justify-between">
+                    <div class="w-full flex flex-col items-center justify-between h-full">
+                        <span class="stat-label text-[#223943] text-[11px] font-bold tracking-wider">稼働時間</span>
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Today</span>
+                                <div id="today-hours" class="stat-value text-2xl md:text-4xl text-[#223943]">0<span
+                                        class="text-xs ml-0.5 text-slate-400">h</span></div>
+                            </div>
+                            <div class="hidden sm:block h-8 w-[1px] bg-slate-100 self-center"></div>
+                            <div class="flex items-baseline gap-1">
+                                <span
+                                    class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Total</span>
+                                <div id="total-hours" class="stat-value text-xl md:text-2xl text-slate-400">0<span
+                                        class="text-xs ml-0.5 text-slate-300">h</span></div>
+                            </div>
+                        </div>
+                        <div class="mt-auto border-t border-slate-50 pt-2 flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Operation
+                                Log</span>
+                            <i class="fa-solid fa-clock text-[10px] text-slate-200"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-3 border-t-4 border-[#BA8987] md:col-span-2 h-40 flex flex-col font-source-code">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="stat-label text-[#223943] text-[13px] font-bold tracking-wider">Lon-Bag
+                            Inventory</span>
+                        <span class="text-[10px] text-slate-400 font-bold">Total: 17</span>
+                    </div>
+                    <div class="flex-1 flex flex-col justify-around py-0.5">
+                        <div class="w-full">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-0.5">
+                                <span>使用中</span>
+                                <span id="bag-using-display-dash" class="text-[#BA8987]">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div id="bar-using" class="bg-[#BA8987] h-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-0.5">
+                                <span>貸出可能</span>
+                                <span id="bag-stock-display-dash" class="text-[#e2041b]">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div id="bar-stock" class="bg-[#e2041b] h-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-0.5">
+                                <span>貸出し中</span>
+                                <span id="bag-lending-display-dash" class="text-[#517174]">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div id="bar-lending" class="bg-[#517174] h-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-1 items-start">
+                <div class="card p-3 border-t-4 border-[#96B6B4] md:col-span-1 flex flex-col h-48 font-source-code">
+                    <span class="stat-label text-[#223943] text-[13px] font-bold tracking-wider mb-1">Daily Avg.
+                        Production</span>
+                    <div class="flex-1 relative flex flex-col justify-center">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pt-12">
+                            <div class="flex items-baseline gap-1">
+                                <span id="avg-production-value" class="text-2xl font-black text-[#223943]">--</span>
+                                <span class="text-[9px] text-slate-400 font-bold">Units</span>
+                            </div>
+                        </div>
+                        <canvas id="gaugeChart" class="max-h-[100px]"></canvas>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span class="text-[9px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full font-bold">Good
+                            Condition</span>
+                    </div>
+                </div>
+
+                <div class="card p-3 border-t-4 border-[#2E5C63] md:col-span-4 flex flex-col h-48 font-source-code">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="stat-label text-[#223943] text-[13px] font-bold tracking-wider mb-1">Production
+                            Trend</span>
+                        <span class="text-[9px] text-slate-300 font-medium">Unit: bags / day</span>
+                    </div>
+                    <div class="flex-1 w-full relative">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-4">
+                <div class="card p-3 border-t-4 border-[#517174] h-96 flex flex-col">
+                    <span class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">自社</span>
+                    <div class="mt-3 space-y-1.5 overflow-y-auto flex-1 custom-scrollbar">
+                        <div class="text-[12px] text-slate-500 flex items-start gap-2"><span
+                                class="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#96B6B4]"></span><span>09/25 <span
+                                    class="text-[#223943]">ふくひびき</span> 765kg</span></div>
+                        <div class="text-[12px] text-slate-500 flex items-start gap-2"><span
+                                class="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-300"></span><span>09/26 <span
+                                    class="text-[#223943]">ひとめぼれ</span> 800kg</span></div>
+                    </div>
+                    <div
+                        class="mt-auto border-t border-slate-50 pt-2 flex justify-between items-center text-[9px] font-bold text-slate-300 uppercase">
+                        <span>Last Activity: Today</span><i class="fa-solid fa-house-chimney text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="card p-3 border-t-4 border-[#96B6B4] h-96 flex flex-col">
+                    <span class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">農家Aさん</span>
+                    <div class="mt-3 space-y-1.5 overflow-y-auto flex-1 custom-scrollbar">
+                        <div class="text-[12px] text-slate-500 flex items-start gap-2"><span
+                                class="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400"></span><span>09/27 <span
+                                    class="text-[#223943]">ふくひびき</span> 850kg</span></div>
+                    </div>
+                    <div
+                        class="mt-auto border-t border-slate-50 pt-2 flex justify-between items-center text-[9px] font-bold text-slate-300 uppercase">
+                        <span>Status: Processing</span><i class="fa-solid fa-user text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="card p-3 border-t-4 border-[#BBC6BB] h-96 flex flex-col opacity-80"><span
+                        class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">農家Bさん</span>
+                    <div class="mt-3 space-y-1.5 flex-1 flex items-center justify-center"><span
+                            class="text-[10px] text-slate-300">No activity today</span></div>
+                    <div class="mt-auto border-t border-slate-50 pt-2 text-[9px] font-bold text-slate-200">STANDBY</div>
+                </div>
+                <div class="card p-3 border-t-4 border-[#E8D6C8] h-96 flex flex-col opacity-80"><span
+                        class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">農家Cさん</span>
+                    <div class="mt-3 space-y-1.5 flex-1 flex items-center justify-center"><span
+                            class="text-[10px] text-slate-300">No activity today</span></div>
+                    <div class="mt-auto border-t border-slate-50 pt-2 text-[9px] font-bold text-slate-200">STANDBY</div>
+                </div>
+                <div class="card p-3 border-t-4 border-[#E2C9C8] h-96 flex flex-col opacity-80"><span
+                        class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">農家Dさん</span>
+                    <div class="mt-3 space-y-1.5 flex-1 flex items-center justify-center"><span
+                            class="text-[10px] text-slate-300">No activity today</span></div>
+                    <div class="mt-auto border-t border-slate-50 pt-2 text-[9px] font-bold text-slate-200">STANDBY</div>
+                </div>
+                <div class="card p-3 border-t-4 border-[#CB9A8F] h-96 flex flex-col opacity-80"><span
+                        class="stat-label text-[#223943] text-[12px] tracking-wider font-bold">農家Eさん</span>
+                    <div class="mt-3 space-y-1.5 flex-1 flex items-center justify-center"><span
+                            class="text-[10px] text-slate-300">No activity today</span></div>
+                    <div class="mt-auto border-t border-slate-50 pt-2 text-[9px] font-bold text-slate-200">STANDBY</div>
+                </div>
+            </div>
+
+        </div>
+        <div id="daily-report-section" class="hidden animate-in fade-in duration-300">
+            <div class="card p-8 border-t-4 border-[#517174] min-h-[500px]">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-xl text-[#223943] flex items-center gap-3">
+                        <i class="fa-solid fa-file-pen text-[#517174]"></i>
+                        <span>日報作成 ・ 荷受登録</span>
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="stat-label block mb-2 font-bold text-[#517174]">WORK DATE</label>
+                            <input type="date" id="work-date"
+                                class="w-full bg-slate-50 border-none p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                        </div>
+
+                        <div class="mt-6">
+                            <label class="stat-label block mb-2 font-bold text-[#517174] border-b pb-2">作業メンバー &
+                                労働時間</label>
+
+                            <div id="member-checkbox-group" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                <p class="text-xs text-slate-400">読み込み中...</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="stat-label block mb-2 font-bold text-[#517174]">PRODUCTION COUNT
+                                (Units)</label>
+                            <input type="number" id="input-production" placeholder="0"
+                                class="w-full bg-slate-50 border-none p-3 rounded-lg text-lg font-source-code focus:ring-2 focus:ring-[#517174]">
+                        </div>
+
+                        <div class="pt-4">
+                            <label class="stat-label block mb-2 font-bold text-[#517174]">SGS荷受票スキャン (AI)</label>
+                            <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-slate-100 transition-colors cursor-pointer"
+                                onclick="startScan()">
+                                <i class="fa-solid fa-camera text-2xl text-[#517174] mb-2"></i>
+                                <p class="text-[11px] font-bold text-slate-600">タップして撮影</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-[#f8fafb] p-6 rounded-2xl border border-slate-100">
+                            <label class="stat-label block mb-4 font-bold text-[#517174] border-b pb-2">LON-BAG
+                                INVENTORY (Total: 17)</label>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">使用中</span>
+                                    <input type="number" id="bag-using" value="0" oninput="calcLendingBag()"
+                                        class="w-full bg-white border-slate-200 p-2 rounded-lg text-lg font-source-code focus:ring-2 focus:ring-[#BA8987]">
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">貸出可能</span>
+                                    <input type="number" id="bag-stock" value="0" oninput="calcLendingBag()"
+                                        class="w-full bg-white border-slate-200 p-2 rounded-lg text-lg font-source-code focus:ring-2 focus:ring-[#517174]">
+                                </div>
+                            </div>
+
+                            <div
+                                class="mt-4 p-3 bg-white rounded-lg flex justify-between items-center border border-dashed border-slate-200">
+                                <span class="text-xs font-bold text-slate-500">現在の「貸出中」自動計算：</span>
+                                <span id="bag-lending-display" class="text-lg font-black text-[#e2041b]">0</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f8fafb] p-6 rounded-2xl border border-slate-100 space-y-4">
+                            <label class="stat-label block mb-2 font-bold text-[#517174] border-b pb-2">RESOURCES
+                                (資材・燃料)</label>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">ストレッチフィルム (本)</span>
+                                    <input type="number" id="input-film" placeholder="0"
+                                        class="w-full bg-white border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold text-red-600 uppercase">フレコン使用数 (袋)</span>
+                                    <input type="number" id="bag-used-count" placeholder="0"
+                                        class="w-full bg-white border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                                </div>
+                                <div class="col-span-2 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">軽油 (L) -
+                                            牽引式ラップマシン・ローダー</span>
+                                        <input type="number" step="0.1" id="input-fuel-diesel" placeholder="0.0"
+                                            class="w-full bg-white border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">ガソリン (L) -
+                                            フォークリフト</span>
+                                        <input type="number" step="0.1" id="input-fuel-gasoline" placeholder="0.0"
+                                            class="w-full bg-white border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="stat-label block mb-2 font-bold text-[#517174]">MEMO / NOTE</label>
+                            <textarea id="work-memo" rows="4"
+                                class="w-full bg-slate-50 border-none p-4 rounded-lg text-sm focus:ring-2 focus:ring-[#517174] placeholder-slate-300"
+                                placeholder="機械の調子など..."></textarea>
+                        </div>
+
+                        <button onclick="saveReport()"
+                            class="w-full bg-[#517174] text-white py-4 rounded-xl font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-all shadow-lg active:scale-[0.98]">
+                            Save Daily Report
+                        </button>
+                    </div>
+                    <div id="receiving-form" class="hidden bg-white p-4 rounded-xl border-2 border-[#517174]">
+                        <h3 class="font-bold mb-2">荷受けスキャン結果確認</h3>
+                        <input type="text" id="rec-farmer" placeholder="生産者名" class="...">
+                        <input type="text" id="rec-variety" placeholder="品種" class="...">
+                        <input type="number" id="rec-weight" placeholder="重量(kg)" class="...">
+                        <button onclick="saveReceivingRecord()"
+                            class="bg-[#517174] text-white p-2 rounded">荷受け確定・保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="export-page-section" class="hidden animate-in fade-in duration-500">
+            <div class="flex flex-col gap-10">
+
+                <section>
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <h2 class="text-2xl font-medium text-[#223943] tracking-tighter">Daily Report Archive</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">作業日報・燃料消費実績</p>
+                        </div>
+                        <button onclick="exportDailyReport()"
+                            class="bg-white border border-slate-200 text-slate-600 px-4 py-2 text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
+                            <i class="fa-solid fa-file-export"></i> 日報CSV出力
+                        </button>
+                    </div>
+                    <div class="bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                        <th class="p-4">Date / 品種</th>
+                                        <th class="p-4">作業メンバー</th>
+                                        <th class="p-4 text-center">個数 / フィルム / フレコン</th>
+                                        <th class="p-4 text-center">LON-BAG (使用/在庫/貸出)</th>
+                                        <th class="p-4 text-center">軽油</th>
+                                        <th class="p-4 text-center">ガソリン</th>
+                                        <th class="p-4">Memo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daily-report-table-body" class="divide-y divide-slate-50 text-sm">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <h2 class="text-2xl font-medium text-[#223943] tracking-tighter">Receipt Logs</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">荷受け表スキャン履歴</p>
+                        </div>
+                        <button onclick="exportReceipts()"
+                            class="bg-white border border-slate-200 text-slate-600 px-4 py-2 text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
+                            <i class="fa-solid fa-file-csv text-green-600"></i> 荷受けCSV出力
+                        </button>
+                    </div>
+                    <div class="bg-white border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                        <th class="p-4">受信日時</th>
+                                        <th class="p-4">品種</th>
+                                        <th class="p-4 text-center">重量(kg)</th>
+                                        <th class="p-4">生産者</th>
+                                        <th class="p-4 text-center">ステータス</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receipt-log-table-body"
+                                    class="divide-y divide-slate-50 text-sm text-[#223943]">
+                                    <tr>
+                                        <td colspan="5" class="p-10 text-center text-slate-300">荷受けデータ準備中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+
+    </main>
+
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // --- 1. 初期設定 ---
+        const SUPABASE_URL = window.APP_CONFIG.SUPABASE_URL;
+        const SUPABASE_KEY = window.APP_CONFIG.SUPABASE_KEY;
+        window.client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. 画面切り替え ---
+        function showSection(sectionId) {
+            const sections = {
+                'dashboard-section': document.getElementById('dashboard-section'),
+                'daily-report-section': document.getElementById('daily-report-section'),
+                'export-page-section': document.getElementById('export-page-section')
+            };
+
+            // 1. 全て隠して、選択されたものだけ表示
+            Object.values(sections).forEach(el => el?.classList.add('hidden'));
+            if (sections[sectionId]) {
+                sections[sectionId].classList.remove('hidden');
+            }
+
+            // 2. PCサイドバー（.nav-link）とスマホ用ナビ（.nav-item）の両方の active を一括制御
+            document.querySelectorAll('.nav-link, .nav-item').forEach(el => {
+                if (el.getAttribute('onclick')?.includes(sectionId)) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+
+            // 3. DATA CENTER を開いた時だけ最新データを読み込む
+            if (sectionId === 'export-page-section') {
+                loadFullReportTable();
+            }
+
+            // 4. スマホで切り替えた際、画面が下にスクロールされたままだと不便なので上に戻す
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- 3. DATA CENTER 読み込み ---
+        async function loadFullReportTable() {
+            const tbodyDaily = document.getElementById('daily-report-table-body');
+            if (!tbodyDaily) return;
+
+            try {
+                const { data: staffData } = await window.client.from('staff_members').select('id, name');
+                const staffMap = {};
+                staffData?.forEach(s => staffMap[s.id] = s.name);
+
+                const { data: dailyData, error } = await window.client
+                    .from('sgs_daily_reports')
+                    .select('*')
+                    .order('work_date', { ascending: false });
+
+                if (error) throw error;
+
+                tbodyDaily.innerHTML = dailyData.map(row => {
+                    const memberNames = (row.member_ids || [])
+                        .map(m => {
+                            // m がオブジェクト {id: "123", hours: 8} の場合と、
+                            // 単なる文字列 "123" の場合の両方に対応させる
+                            const mId = (typeof m === 'object') ? m.id : m;
+
+                            // window.membersの中から、IDが一致する人を探す
+                            const found = window.members ? window.members.find(u => String(u.id) === String(mId)) : null;
+
+                            // 名前が見つかれば名前を、なければ(m.nameがあればそれを、それもなければ'不明')
+                            return found ? found.name : (m.name || '不明');
+                        })
+                        .join(', ');
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors font-source-code border-b border-slate-50 text-[#223943]">
+                            <td class="p-4">
+                                <div class="font-bold text-xs">${row.work_date}</div>
+                                <div class="text-[10px] text-teal-600 font-bold">${row.rice_variety || '-'}</div>
+                            </td>
+
+                            <td class="p-4">
+                                <div class="flex flex-wrap gap-1 w-[120px]">
+                                     ${memberNames.split(', ').map(n => `<span class="bg-slate-100 px-2 py-0.5 rounded text-[11px] font-bold">${n}</span>`).join('')}
+                                </div>
+                            </td>
+
+                            <td class="p-4">
+                                <div class="flex items-center gap-4 justify-center">
+                                     <div class="text-center">
+                                        <div class="text-lg font-black">${row.production_count || 0}</div>
+                                        <div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Production</div>
+                                     </div>
+                                     <div class="h-8 w-[1px] bg-slate-100"></div>
+                                     <div class="text-center">
+                                         <div class="text-sm font-bold text-slate-600">
+                                            <i class="fa-solid fa-scroll text-[10px] mr-1"></i>${row.film_count || 0}
+                                         </div>
+                                         <div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Film</div>
+                                       </div>
+                                      <div class="text-center">
+                                        <div class="text-sm font-bold text-slate-600">
+                                              <i class="fa-solid fa-box-open text-[10px] mr-1"></i>${row.bag_used_count || 0}
+                                        </div>
+                                         <div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">Bag</div>
+                                      </div>
+                                 </div>
+                            </td>
+                             <td class="p-4 text-center bg-slate-50/50">
+                                <div class="text-sm font-bold">
+                                      <span class="text-slate-400" title="使用中">${row.bag_using || 0}</span> / 
+                                      <span class="text-slate-400" title="貸出可能">${row.bag_stock || 0}</span> / 
+                                      <span class="text-slate-400" title="貸出中">${row.bag_lending || 0}</span>
+                                </div>
+                                 <div class="text-[11px] text-slate-400 mt-1 uppercase tracking-tighter font-bold">In / Stock / Out</div>
+                            </td>
+
+                            <td class="p-4 text-center text-slate-400 font-bold bg-blue-50/30">${row.fuel_diesel || 0}L</td>
+                            <td class="p-4 text-center text-slate-400 font-bold bg-orange-50/30">${row.fuel_gasoline || 0}L</td>
+
+                            <td class="p-4 text-[11px] text-slate-400 max-w-[120px] truncate" title="${row.memo || ''}">${row.memo || ''}</td>
+                        </tr>`;
+                }).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        // --- 4. 日報保存 ---
+        async function saveReport() {
+            try {
+                const workDate = document.getElementById('work-date')?.value;
+                const weather = document.getElementById('weather-status')?.innerText || "不明";
+                const productionCount = parseInt(document.getElementById('input-production')?.value || 0);
+                const filmCount = parseInt(document.getElementById('input-film')?.value || 0);
+                const bagUsedCount = parseInt(document.getElementById('bag-used-count')?.value || 0);
+                const fuelDiesel = parseFloat(document.getElementById('input-diesel')?.value || 0);
+                const fuelGasoline = parseFloat(document.getElementById('input-gasoline')?.value || 0);
+
+                // ロンバッグ在庫
+                const bagUsing = parseInt(document.getElementById('bag-using')?.value || 0);
+                const bagStock = parseInt(document.getElementById('bag-stock')?.value || 0);
+                const bagLending = parseInt(document.getElementById('bag-lending-display')?.innerText || 0);
+
+                const memo = document.querySelector('textarea')?.value || "";
+
+                // メンバーと時間をセットで取得
+                const selectedMembersData = Array.from(document.querySelectorAll('input[name="work_members"]:checked')).map(cb => {
+                    const memberId = cb.value;
+                    const hours = parseFloat(document.getElementById(`hours-${memberId}`)?.value || 0);
+                    return { id: memberId, hours: hours };
+                });
+
+                if (!workDate || selectedMembersData.length === 0) return alert("日付と作業メンバーは必須です！");
+
+                const { error } = await window.client.from('sgs_daily_reports').insert([{
+                    work_date: workDate,
+                    weather: weather,
+                    member_ids: selectedMembersData,
+                    production_count: productionCount,
+                    film_count: filmCount,
+                    bag_used_count: bagUsedCount,
+                    fuel_diesel: fuelDiesel,
+                    fuel_gasoline: fuelGasoline,
+                    bag_using: bagUsing,
+                    bag_stock: bagStock,
+                    bag_lending: bagLending,
+                    memo: memo,
+                    created_at: new Date().toISOString()
+                }]);
+
+                if (error) throw error;
+                alert("日報を保存しました！");
+
+                // 数値を最新にする
+                await loadDashboardStats();
+
+                // 画面をダッシュボードに切り替える
+                showSection('dashboard-section');
+
+                // フォームをリセット
+                const form = document.getElementById('daily-report-form');
+                if (form) form.reset();
+
+                // 時間の入力欄もリセット
+                document.querySelectorAll('input[id^="hours-"]').forEach(input => input.value = "");
+
+                document.querySelectorAll('input[name="work_members"]:checked').forEach(cb => cb.checked = false);
+
+                const weatherLabel = document.getElementById('weather-status');
+                if (weatherLabel) weatherLabel.innerText = "晴れ";
+            } catch (error) { alert(`保存失敗: ${error.message}`); }
+        }
+
+        // --- 5. 天気予報 (酒田市) ---
+        async function updateWeatherForecast() {
+            const container = document.getElementById('weather-forecast');
+            if (!container) return;
+            const apiKey = 'ad4f571f6aeeca3ef62f29588e672461';
+            const url = `https://api.openweathermap.org/data/2.5/forecast?lat=38.91&lon=139.83&units=metric&appid=${apiKey}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const dailyData = data.list.filter(item => item.dt_txt.includes("06:00:00")).slice(0, 7);
+                const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+                container.innerHTML = dailyData.map(d => {
+                    const date = new Date(d.dt * 1000);
+                    const dayIndex = date.getDay();
+                    let textColor = 'text-slate-400';
+                    if (dayIndex === 0) textColor = 'text-red-400';
+                    if (dayIndex === 6) textColor = 'text-blue-400';
+
+                    let iconClass = 'fa-sun text-amber-500';
+                    if (d.weather[0].main === 'Rain') iconClass = 'fa-cloud-showers-heavy text-blue-400';
+                    if (d.weather[0].main === 'Clouds') iconClass = 'fa-cloud text-slate-300';
+
+                    return `
+                <div class="flex items-center justify-center gap-2 border-r border-slate-50 last:border-r-0 h-full">
+                    <div class="flex flex-col items-start">
+                        <span class="text-[10px] ${textColor} font-bold leading-none">${date.getMonth() + 1}/${date.getDate()}</span>
+                        <span class="${textColor} text-[10px] font-bold leading-none">${days[dayIndex]}</span>
+                    </div>
+                    <i class="fa-solid ${iconClass} text-base"></i>
+                    <span class="text-[#223943] text-[13px] font-black font-source-code">${Math.round(d.main.temp)}°</span>
+                </div>`;
+                }).join('');
+            } catch (e) { container.innerHTML = 'Weather Offline'; }
+        }
+
+        // --- 6. グラフと初期化 ---
+        function initCharts() {
+            const ctxGauge = document.getElementById('gaugeChart')?.getContext('2d');
+            if (ctxGauge) {
+                // ★ window.gaugeChart に代入する
+                window.gaugeChart = new Chart(ctxGauge, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [0, 100], // 初期値は0（あとで更新）
+                            backgroundColor: ['#517174', '#f1f5f9'],
+                            borderWidth: 0,
+                            circumference: 180,
+                            rotation: 270,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { tooltip: { enabled: false } } }
+                });
+            }
+
+            const ctxTrend = document.getElementById('trendChart')?.getContext('2d');
+            if (ctxTrend) {
+                const gradient = ctxTrend.createLinearGradient(0, 0, 0, 200);
+                gradient.addColorStop(0, 'rgba(150, 182, 180, 0.5)');
+                gradient.addColorStop(1, 'rgba(150, 182, 180, 0.0)');
+
+                // --- 6. グラフと初期化 ---//
+                window.trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Daily',
+                                data: [],
+                                borderColor: '#96B6B4',
+                                backgroundColor: gradient,
+                                fill: true,
+                                tension: 0,
+                                pointBackgroundColor: '#2E5C63',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            },
+                            {
+                                // ★ 平均線用のデータセットも追加しておく（最初は空のデータでOK）
+                                label: 'Average',
+                                data: [],
+                                borderColor: '#FF9F43',
+                                borderDash: [5, 5],
+                                fill: false,
+                                tension: 0,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f8fafc' }, ticks: { font: { size: 9, family: 'Source Code Pro' } } },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: 10,
+                                    font: { size: 9, family: 'Source Code Pro' }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function loadStaffMembers() {
+            const { data: members, error } = await window.client.from('staff_members').select('*');
+            if (error) return console.error(error);
+
+            const container = document.getElementById('member-checkbox-group');
+            if (!container) return;
+            container.innerHTML = '';
+
+            members.forEach(m => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100 mb-2";
+                div.innerHTML = `
+            <label class="flex items-center gap-2 cursor-pointer flex-1">
+                <input type="checkbox" name="work_members" value="${m.id}" class="w-5 h-5 rounded border-slate-300 text-[#517174] focus:ring-[#517174]">
+                <span class="text-sm text-slate-600">${m.name}</span>
+            </label>
+            <div class="flex items-center gap-1">
+                <input type="number" step="0.5" id="hours-${m.id}" placeholder="0" 
+                    class="w-16 p-1 text-right border-b border-slate-300 bg-transparent focus:border-[#517174] outline-none font-source-code text-sm text-slate-700">
+                <span class="text-[10px] text-slate-400 font-bold">h</span>
+            </div>
+        `;
+                container.appendChild(div);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const dInput = document.getElementById('work-date');
+            if (dInput) dInput.value = new Date().toISOString().split('T')[0];
+
+            initCharts(); // グラフの枠組みを作る
+
+            await loadDashboardStats();
+            await loadStaffMembers();
+
+            updateWeatherForecast();
+        });
+
+        // --- 7. CSVエクスポート機能 ---
+        function exportDailyReport() {
+            const tbody = document.getElementById('daily-report-table-body');
+            if (!tbody || tbody.rows.length === 0 || tbody.innerText.includes('データがまだありません')) {
+                alert("出力するデータがありません。");
+                return;
+            }
+
+            // ヘッダー（Excelで文字化けしないようにBOM付きUTF-8に）
+            let csvContent = "\ufeff" + "日付,品種,作業メンバー,個数,フィルム,フレコン,軽油(L),ガソリン(L),メモ\n";
+
+            // テーブルの各行をループしてデータを作成
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+
+                // 各項目のテキストを整理（改行やカンマを削除）
+                const date = cols[0].innerText.split('\n')[0].trim();
+                const variety = cols[0].innerText.split('\n')[1]?.trim() || '-';
+                const members = cols[1].innerText.replace(/\n/g, ' ').trim();
+
+                // 個数/フィルム/フレコン（横並びの場所から数値だけ抽出）
+                const production = cols[2].querySelector('.text-lg')?.innerText.replace('個', '').trim() || '0';
+                const film = cols[2].innerText.match(/Film\s*(\d+)/)?.[1] || '0';
+                const bag = cols[2].innerText.match(/Bag\s*(\d+)/)?.[1] || '0';
+
+                const diesel = cols[4].innerText.replace('L', '').trim();
+                const gasoline = cols[5].innerText.replace('L', '').trim();
+                const memo = `"${cols[6].innerText.trim().replace(/"/g, '""')}"`;
+
+                csvContent += `${date},${variety},${members},${production},${film},${bag},${diesel},${gasoline},${memo}\n`;
+            });
+
+            // ダウンロード処理
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            const fileName = `SGS_DailyReport_${new Date().toISOString().split('T')[0]}.csv`;
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- 8. 荷受けCSVエクスポート機能 ---
+        function exportReceipts() {
+            const tbody = document.getElementById('receipt-log-table-body');
+            // データがない、または「準備中」などのメッセージのみの場合は中断
+            if (!tbody || tbody.rows.length === 0 || tbody.innerText.includes('データがまだありません') || tbody.innerText.includes('荷受けデータ準備中')) {
+                alert("出力する荷受けデータがありません。");
+                return;
+            }
+
+            // ヘッダー（BOM付きUTF-8）
+            let csvContent = "\ufeff" + "受信日時,品種,重量(kg),生産者,ステータス\n";
+
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+
+                // 各項目のテキストを取得して整形
+                const timestamp = cols[0].innerText.trim();
+                const variety = cols[1].innerText.trim();
+                const weight = cols[2].innerText.replace('kg', '').trim();
+                const producer = cols[3].innerText.trim();
+                const status = cols[4].innerText.trim();
+
+                csvContent += `${timestamp},${variety},${weight},"${producer}",${status}\n`;
+            });
+
+            // ダウンロード処理
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            const fileName = `SGS_ReceiptLog_${new Date().toISOString().split('T')[0]}.csv`;
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function loadDashboardStats() {
+            try {
+                if (!window.members || window.members.length === 0) {
+                    const { data: mData } = await window.client.from('staff_members').select('*');
+                    if (mData) window.members = mData;
+                }
+
+                const { data: reports, error } = await window.client
+                    .from('sgs_daily_reports')
+                    .select('*')
+                    .order('work_date', { ascending: false });
+
+                if (error) throw error;
+                if (!reports || reports.length === 0) return;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                let todayProd = 0, totalProd = 0;
+                let todayBags = 0, totalBags = 0;
+                let todayHours = 0, totalHours = 0;
+
+                reports.forEach(r => {
+                    const prod = parseInt(r.production_count || 0);
+                    const bags = parseInt(r.bag_used_count || 0);
+
+                    let maxHrs = 0;
+                    if (r.member_ids && Array.isArray(r.member_ids)) {
+                        maxHrs = Math.max(...r.member_ids.map(m => parseFloat(m.hours) || 0), 0);
+                    }
+
+                    totalProd += prod;
+                    totalBags += bags;
+                    totalHours += maxHrs;
+
+                    if (r.work_date === todayStr) {
+                        todayProd += prod;
+                        todayBags += bags;
+                        todayHours += maxHrs;
+                    }
+                });
+
+                // --- 画面への反映 ---
+                const ui = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = val;
+                };
+
+                ui('today-production', String(todayProd).padStart(2, '0'));
+                ui('total-production', totalProd.toLocaleString());
+                ui('today-bags', todayBags);
+                ui('total-bags', totalBags.toLocaleString());
+                ui('today-hours', `${todayHours.toFixed(1)}h`);
+                ui('total-hours', `${totalHours.toFixed(1)}h`);
+
+                const latest = reports[0];
+                if (latest) {
+                    ui('bag-using-display-dash', latest.bag_using || 0);
+                    ui('bag-stock-display-dash', latest.bag_stock || 0);
+                    ui('bag-lending-display-dash', latest.bag_lending || 0);
+
+                    const updateBar = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.width = `${(val / 17) * 100}%`;
+                    };
+                    updateBar('bar-using', latest.bag_using || 0);
+                    updateBar('bar-stock', latest.bag_stock || 0);
+                    updateBar('bar-lending', latest.bag_lending || 0);
+                }
+
+                // ==========================================
+                // ★ 追加：データセンター（一覧表）の更新処理
+                // ==========================================
+                const tbody = document.getElementById('report-list-body');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    reports.forEach(r => {
+                        const mNames = (r.member_ids || [])
+                            .map(m => {
+                                const mId = (typeof m === 'object') ? m.id : m;
+                                // String() を使って型を揃えて比較する
+                                const found = window.members ? window.members.find(u => String(u.id) === String(mId)) : null;
+                                return found ? found.name : (m.name || '不明');
+                            }).join(', ');
+
+                        const tr = document.createElement('tr');
+                        tr.className = "border-b border-slate-50 hover:bg-slate-50/50 transition-colors";
+                        tr.innerHTML = `
+                            <td class="p-3">
+                                <div class="text-[11px] font-bold text-slate-700">${r.work_date}</div>
+                                <div class="text-[9px] text-slate-400">${r.variety || '-'}</div>
+                            </td>
+                            <td class="p-3 text-[11px] text-slate-600">${mNames}</td>
+                            <td class="p-3 text-center">
+                                <div class="text-lg font-bold text-slate-700">${r.production_count || 0}個</div>
+                                <div class="text-[9px] text-slate-400">Film ${r.film_count || 0} / <span class="text-red-500 font-bold">Bag ${r.bag_used_count || 0}</span></div>
+                            </td>
+                            <td class="p-3 text-[10px] text-center text-slate-400">${r.bag_using || 0} / ${r.bag_stock || 0} / ${r.bag_lending || 0}</td>
+                            <td class="p-3 text-right text-blue-600 font-mono text-[11px]">${r.fuel_diesel || 0}L</td>
+                            <td class="p-3 text-right text-orange-600 font-mono text-[11px]">${r.fuel_gasoline || 0}L</td>
+                            <td class="p-3 text-[10px] text-slate-400 truncate max-w-[150px]">${r.memo || ''}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                // グラフの更新
+                if (typeof updateCharts === 'function') {
+                    const tryUpdate = () => {
+                        if (window.trendChart && window.trendChart.data) {
+                            updateCharts(reports);
+                        } else {
+                            setTimeout(tryUpdate, 100);
+                        }
+                    };
+                    tryUpdate();
+                }
+
+            } catch (err) {
+                console.error("Dashboard update error:", err.message);
+            }
+        }
+
+        // --- ロンバッグ貸出中の自動計算（日報入力画面用） ---
+        function calcLendingBag() {
+            const totalInventory = 17; // 全体の数（固定）
+
+            // 入力された値を取得（空っぽなら0にする）
+            const using = parseInt(document.getElementById('bag-using').value) || 0;
+            const stock = parseInt(document.getElementById('bag-stock').value) || 0;
+
+            // 計算： 全体 - (使用中 + 貸出可能) = 貸出し中
+            const lending = totalInventory - (using + stock);
+
+            // 画面の赤い数字を更新
+            const displayEl = document.getElementById('bag-lending-display');
+            if (displayEl) {
+                displayEl.innerText = lending;
+            }
+        }
+
+        function updateCharts(reports) {
+            if (!window.trendChart || !reports || reports.length === 0) return;
+
+            // 1. データを日付順に並べ替え
+            const sortedData = [...reports].sort((a, b) =>
+                new Date(a.work_date) - new Date(b.work_date)
+            );
+
+            // 2. ラベル（日付）を作成
+            const labels = sortedData.map(r => {
+                const d = new Date(r.work_date);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            });
+
+            // 3. 数値を抽出
+            const dailyProd = sortedData.map(r => r.production_count || 0);
+
+            // 平均値を計算
+            let sum = 0;
+            const avgProd = dailyProd.map((val, index) => {
+                sum += val;
+                return (sum / (index + 1)).toFixed(1);
+            });
+
+            // 4. トレンドグラフを更新
+            window.trendChart.data.labels = labels;
+            window.trendChart.data.datasets[0].data = dailyProd;
+            if (window.trendChart.data.datasets[1]) {
+                window.trendChart.data.datasets[1].data = avgProd;
+            }
+            window.trendChart.update();
+
+            // 「latestAvg」を定義
+            const latestAvg = avgProd[avgProd.length - 1];
+
+            // 表示を書き換える
+            const avgDisplay = document.getElementById('avg-production-value');
+            if (avgDisplay) {
+                avgDisplay.innerText = latestAvg;
+            }
+
+            // ゲージグラフの更新
+            if (window.gaugeChart) {
+                const target = 40;
+                window.gaugeChart.data.datasets[0].data = [latestAvg, Math.max(0, target - latestAvg)];
+                window.gaugeChart.update();
+            }
+        }
+
+    </script>
+    <nav
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-[#517174] border-t border-white/10 h-16 z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex justify-center rounded-none">
+        <div class="flex justify-around items-center w-full max-w-sm px-4 rounded-none">
+            <button onclick="showSection('dashboard-section')"
+                class="nav-item flex flex-col items-center gap-1 flex-1 transition-all">
+                <i class="fa-solid fa-chart-pie text-lg text-white/60"></i>
+                <span class="text-[9px] font-bold text-white/60 uppercase tracking-wider">Dash</span>
+            </button>
+            <button onclick="showSection('daily-report-section')"
+                class="nav-item flex flex-col items-center gap-1 flex-1 transition-all">
+                <i class="fa-solid fa-pen-to-square text-lg text-white/60"></i>
+                <span class="text-[9px] font-bold text-white/60 uppercase tracking-wider">Report</span>
+            </button>
+            <button onclick="showSection('export-page-section')"
+                class="nav-item flex flex-col items-center gap-1 flex-1 transition-all">
+                <i class="fa-solid fa-database text-lg text-white/60"></i>
+                <span class="text-[9px] font-bold text-white/60 uppercase tracking-wider">Data</span>
+            </button>
+        </div>
+    </nav>
+
+    <style>
+        /* 1. スマホ時のレイアウト調整 */
+        @media (max-width: 767px) {
+            main {
+                margin-left: 0 !important;
+                padding-bottom: 90px !important;
+            }
+
+            /* 下の角丸を強制的に消去 */
+            nav,
+            nav *,
+            .nav-item {
+                border-radius: 0 !important;
+            }
+        }
+
+        /* 2. スマホメニューのアクティブ表示（白く強調） */
+        .nav-item.active i,
+        .nav-item.active span {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active i {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 3. 印刷用設定 */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+
+            nav,
+            aside,
+            button,
+            .no-print {
+                display: none !important;
+            }
+
+            main {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</body>
+
+</html>
