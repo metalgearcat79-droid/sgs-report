@@ -364,14 +364,14 @@
 
         </div>
         <div id="daily-report-section" class="hidden animate-in fade-in duration-300">
-            <div class="card p-8 border-t-4 border-[#517174] min-h-[500px]">
+            <div
+                class="card p-4 md:p-8 bg-slate-50 border border-slate-100 border-t-4 border-t-[#517174] min-h-[500px]">
                 <div class="flex items-center justify-between mb-8">
                     <h3 class="text-xl text-[#223943] flex items-center gap-3">
                         <i class="fa-solid fa-file-pen text-[#517174]"></i>
                         <span>日報作成 ・ 荷受登録</span>
                     </h3>
                 </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <div class="space-y-6">
                         <div>
@@ -437,7 +437,8 @@
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">ストレッチフィルム (本)</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">ストレッチフィルム
+                                        (本)</span>
                                     <input type="number" id="input-film" placeholder="0"
                                         class="w-full bg-white border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
                                 </div>
@@ -486,6 +487,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <div id="export-page-section" class="hidden animate-in fade-in duration-500">
             <div class="flex flex-col gap-10">
@@ -493,8 +495,10 @@
                 <section>
                     <div class="flex justify-between items-end mb-4">
                         <div>
-                            <h2 class="text-2xl font-medium text-[#223943] tracking-tighter">Daily Report Archive</h2>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">作業日報・燃料消費実績</p>
+                            <h2 class="text-2xl font-medium text-[#223943] tracking-tighter">Daily Report Archive
+                            </h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">作業日報・燃料消費実績
+                            </p>
                         </div>
                         <button onclick="exportDailyReport()"
                             class="bg-white border border-slate-200 text-slate-600 px-4 py-2 text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
@@ -527,7 +531,8 @@
                     <div class="flex justify-between items-end mb-4">
                         <div>
                             <h2 class="text-2xl font-medium text-[#223943] tracking-tighter">Receipt Logs</h2>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">荷受け表スキャン履歴</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">荷受け表スキャン履歴
+                            </p>
                         </div>
                         <button onclick="exportReceipts()"
                             class="bg-white border border-slate-200 text-slate-600 px-4 py-2 text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
@@ -560,7 +565,7 @@
 
             </div>
         </div>
-
+        </div>
 
     </main>
 
@@ -760,17 +765,18 @@
             } catch (error) { alert(`保存失敗: ${error.message}`); }
         }
 
-        // --- 5. 天気予報 (酒田市) ---
+        // --- 5. 天気予報 (酒田市日向地区) ---
         async function updateWeatherForecast() {
             const container = document.getElementById('weather-forecast');
             if (!container) return;
             const apiKey = 'ad4f571f6aeeca3ef62f29588e672461';
-            const url = `https://api.openweathermap.org/data/2.5/forecast?lat=38.91&lon=139.83&units=metric&appid=${apiKey}`;
+            // 日向地区の座標（北緯38.99, 東経140.01）に修正
+            const url = `https://api.openweathermap.org/data/2.5/forecast?lat=38.99&lon=140.01&units=metric&appid=${apiKey}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-                const dailyData = data.list.filter(item => item.dt_txt.includes("06:00:00")).slice(0, 7);
+                const dailyData = data.list.filter(item => item.dt_txt.includes("06:00:00")).slice(0, 5);
                 const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
                 container.innerHTML = dailyData.map(d => {
@@ -785,13 +791,12 @@
                     if (d.weather[0].main === 'Clouds') iconClass = 'fa-cloud text-slate-300';
 
                     return `
-                <div class="flex items-center justify-center gap-2 border-r border-slate-50 last:border-r-0 h-full">
-                    <div class="flex flex-col items-start">
-                        <span class="text-[10px] ${textColor} font-bold leading-none">${date.getMonth() + 1}/${date.getDate()}</span>
-                        <span class="${textColor} text-[10px] font-bold leading-none">${days[dayIndex]}</span>
-                    </div>
-                    <i class="fa-solid ${iconClass} text-base"></i>
-                    <span class="text-[#223943] text-[13px] font-black font-source-code">${Math.round(d.main.temp)}°</span>
+                <div class="flex items-center justify-center gap-1 md:gap-2 border-r border-slate-50 last:border-r-0 h-full">
+                   <div class="flex flex-col items-start scale-90 md:scale-100">
+                        <span class="text-[9px] md:text-[10px] ${textColor} font-bold leading-none">${date.getMonth() + 1}/${date.getDate()}</span>
+                        <span class="hidden md:inline ${textColor} text-[10px] font-bold leading-none">${days[dayIndex]}</span> </div>
+                    <i class="fa-solid ${iconClass} text-sm md:text-base"></i>
+                    <span class="text-[#223943] text-[12px] md:text-[13px] font-black font-source-code">${Math.round(d.main.temp)}°</span>
                 </div>`;
                 }).join('');
             } catch (e) { container.innerHTML = 'Weather Offline'; }
