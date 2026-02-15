@@ -566,9 +566,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // --- 1. 初期設定 ---
-        const SUPABASE_URL = window.APP_CONFIG.SUPABASE_URL;
-        const SUPABASE_KEY = window.APP_CONFIG.SUPABASE_KEY;
+        const SUPABASE_URL = (typeof window.APP_CONFIG !== 'undefined')
+            ? window.APP_CONFIG.SUPABASE_URL
+            : '%%SUPABASE_URL%%';
+
+        const SUPABASE_KEY = (typeof window.APP_CONFIG !== 'undefined')
+            ? window.APP_CONFIG.SUPABASE_KEY
+            : '%%SUPABASE_KEY%%';
+
         window.client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- 2. 画面切り替え ---
