@@ -195,7 +195,7 @@
                             <div class="flex items-baseline gap-1">
                                 <span
                                     class="text-[9px] font-light text-slate-400 uppercase tracking-tighter">Today</span>
-                                <div id="today-bags" class="stat-value text-3xl md:text-5xl text-red-600">0</div>
+                                <div id="today-bags" class="stat-value text-3xl md:text-5xl text-[#223943]">0</div>
                             </div>
                             <div class="hidden sm:block h-8 w-[1px] bg-slate-100 self-center"></div>
                             <div class="flex items-baseline gap-1">
@@ -267,7 +267,8 @@
                         <div class="w-full">
                             <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-0.5">
                                 <span>貸出し中</span>
-                                <span id="bag-lending-display-dash" class="text-[#517174] text-[15px] font-black">0</span>
+                                <span id="bag-lending-display-dash"
+                                    class="text-[#517174] text-[15px] font-black">0</span>
                             </div>
                             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                                 <div id="bar-lending" class="bg-[#517174] h-full" style="width: 0%"></div>
@@ -377,14 +378,15 @@
                         <div>
                             <label class="stat-label block mb-2 font-bold text-[#517174]">WORK DATE</label>
                             <input type="date" id="work-date"
-                                class="w-full bg-slate-50 border-none p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
+                                class="w-full bg-white border border-slate-200 p-3 rounded-lg text-sm font-source-code focus:ring-2 focus:ring-[#517174]">
                         </div>
 
                         <div class="mt-6">
                             <label class="stat-label block mb-2 font-bold text-[#517174] border-b pb-2">作業メンバー &
                                 労働時間</label>
 
-                            <div id="member-checkbox-group" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            <div id="member-checkbox-group"
+                                class="space-y-2 max-h-60 overflow-y-auto pr-2 bg-white p-3 rounded-lg border border-slate-100">
                                 <p class="text-xs text-slate-400">読み込み中...</p>
                             </div>
                         </div>
@@ -393,12 +395,12 @@
                             <label class="stat-label block mb-2 font-bold text-[#517174]">PRODUCTION COUNT
                                 (Units)</label>
                             <input type="number" id="input-production" placeholder="0"
-                                class="w-full bg-slate-50 border-none p-3 rounded-lg text-lg font-source-code focus:ring-2 focus:ring-[#517174]">
+                                class="w-full bg-white border border-slate-200 p-3 rounded-lg text-lg ...">
                         </div>
 
                         <div class="pt-4">
                             <label class="stat-label block mb-2 font-bold text-[#517174]">SGS荷受票スキャン (AI)</label>
-                            <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-slate-100 transition-colors cursor-pointer"
+                            <div class="bg-white border-2 border-dashed border-slate-200 rounded-xl p-6 ...">
                                 onclick="startScan()">
                                 <i class="fa-solid fa-camera text-2xl text-[#517174] mb-2"></i>
                                 <p class="text-[11px] font-bold text-slate-600">タップして撮影</p>
@@ -467,7 +469,7 @@
                         <div>
                             <label class="stat-label block mb-2 font-bold text-[#517174]">MEMO / NOTE</label>
                             <textarea id="work-memo" rows="4"
-                                class="w-full bg-slate-50 border-none p-4 rounded-lg text-sm focus:ring-2 focus:ring-[#517174] placeholder-slate-300"
+                                class="w-full bbg-white border border-slate-200 p-4 rounded-lg text-sm focus:ring-2 focus:ring-[#517174] placeholder-slate-300"
                                 placeholder="機械の調子など..."></textarea>
                         </div>
 
@@ -852,7 +854,7 @@
                                 // ★ 平均線用のデータセットも追加しておく（最初は空のデータでOK）
                                 label: 'Average',
                                 data: [],
-                                borderColor: '#FF9F43',
+                                borderColor: '#b0778c',
                                 borderDash: [5, 5],
                                 fill: false,
                                 tension: 0,
