@@ -1321,7 +1321,6 @@
                         const mNames = (r.member_ids || [])
                             .map(m => {
                                 const mId = (typeof m === 'object') ? m.id : m;
-                                // String() を使って型を揃えて比較する
                                 const found = window.members ? window.members.find(u => String(u.id) === String(mId)) : null;
                                 return found ? found.name : (m.name || '不明');
                             }).join(', ');
