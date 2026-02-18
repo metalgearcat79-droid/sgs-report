@@ -117,7 +117,7 @@
         <div class="p-8 text-lg tracking-tighter text-white border-b border-white/5">
             SGS Daily Report
         </div>
-            <nav class="flex-1 flex flex-col mt-4 px-0 pb-4">
+        <nav class="flex-1 flex flex-col mt-4 px-0 pb-4">
 
             <a href="#" onclick="showSection('dashboard-section')"
                 class="nav-link active flex items-center gap-3 px-6 py-4 text-slate-400 hover:bg-[#517174] hover:text-white transition-all border-l-4 border-transparent hover:border-[#E2C9C8] group">
@@ -410,11 +410,21 @@
 
                         <div class="pt-4">
                             <label class="stat-label block mb-2 font-bold text-[#517174]">SGS荷受票スキャン (AI)</label>
-                            <div class="bg-white border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-slate-100 transition-colors cursor-pointer"
-                                onclick="startScan()">
+
+                            <label
+                                class="bg-white border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-slate-100 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-camera text-2xl text-[#517174] mb-2"></i>
-                                <p class="text-[11px] font-bold text-slate-600">タップして撮影</p>
+                                <p class="text-[11px] font-bold text-slate-600">タップして撮影 (連続可)</p>
+                                <input type="file" id="camera-input" accept="image/*" capture="environment"
+                                    class="hidden" onchange="handleScan(this)">
+                            </label>
+
+                            <div id="scanned-list" class="mt-4 grid grid-cols-3 gap-2">
                             </div>
+
+                            <p id="scan-status"
+                                class="text-[10px] text-slate-400 mt-2 text-right uppercase tracking-widest">0 sheets
+                                scanned</p>
                         </div>
                     </div>
 
@@ -639,6 +649,30 @@
             </div>
         </div>
 
+        <div id="ai-loading-overlay"
+            class="fixed inset-0 bg-[#223943]/80 backdrop-blur-sm z-[9999] hidden flex-col items-center justify-center text-white">
+            <div class="relative">
+                <div class="w-24 h-24 border-4 border-white/20 border-t-[#E2C9C8] rounded-full animate-spin"></div>
+                <i
+                    class="fa-solid fa-brain absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl animate-pulse"></i>
+            </div>
+
+            <div class="mt-8 text-center">
+                <h3 class="text-xl font-bold tracking-widest mb-2">AI ANALYZING...</h3>
+                <p class="text-slate-300 text-sm mb-4">荷受票を一枚ずつ丁寧に読み取っています</p>
+
+                <div class="w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+                    <div id="ai-progress-bar" class="h-full bg-[#E2C9C8] w-0 transition-all duration-500"></div>
+                </div>
+                <p id="ai-progress-text" class="text-[10px] text-slate-400 mt-2 font-source-code uppercase">Processing:
+                    0 / 0</p>
+            </div>
+
+            <p class="absolute bottom-10 text-[11px] text-white/40 italic">
+                "山形県酒田市 日向地区の美味しいお米のために..."
+            </p>
+        </div>
+
     </main>
 
     <script src="config.js"></script>
@@ -654,6 +688,40 @@
             : '%%SUPABASE_KEY%%';
 
         window.client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ローディング画面を表示する
+        function showAILoading(total) {
+            const overlay = document.getElementById('ai-loading-overlay');
+            const progressBar = document.getElementById('ai-progress-bar');
+            const progressText = document.getElementById('ai-progress-text');
+
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+            updateAIProgress(0, total);
+        }
+
+        // 進捗を更新する
+        function updateAIProgress(current, total) {
+            const progressBar = document.getElementById('ai-progress-bar');
+            const progressText = document.getElementById('ai-progress-text');
+
+            if (progressBar && progressText) {
+                const percent = total > 0 ? (current / total) * 100 : 0;
+                progressBar.style.width = `${percent}%`;
+                progressText.innerText = `Processing: ${current} / ${total}`;
+            }
+        }
+
+        // ローディング画面を隠す
+        function hideAILoading() {
+            const overlay = document.getElementById('ai-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
 
         // --- 2. 画面切り替え ---
         function showSection(sectionId) {
@@ -774,6 +842,11 @@
 
         // --- 4. 日報保存 ---
         async function saveReport() {
+            // 画像が1枚でもあればAI解析を先に実行する
+            if (scannedItems.length > 0) {
+                await processImagesWithAI();
+            }
+
             try {
                 const workDate = document.getElementById('work-date')?.value;
                 const weather = document.getElementById('weather-status')?.innerText || "不明";
@@ -836,6 +909,60 @@
                 const weatherLabel = document.getElementById('weather-status');
                 if (weatherLabel) weatherLabel.innerText = "晴れ";
             } catch (error) { alert(`保存失敗: ${error.message}`); }
+        }
+
+        let scannedItems = []; // 撮影した画像を溜める配列
+
+        function handleScan(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const imageData = e.target.result;
+
+                    // データを配列に追加
+                    const newItem = {
+                        id: Date.now(),
+                        image: imageData,
+                        file: file // Geminiに送る時用の生データ
+                    };
+                    scannedItems.push(newItem);
+
+                    // 画面表示を更新
+                    renderScannedList();
+
+                    // カメラを連続で使えるようにリセット
+                    input.value = '';
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderScannedList() {
+            const listContainer = document.getElementById('scanned-list');
+            const statusText = document.getElementById('scan-status');
+
+            listContainer.innerHTML = '';
+            statusText.innerText = `${scannedItems.length} sheets scanned`;
+
+            scannedItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "relative group animate-in zoom-in duration-200";
+                div.innerHTML = `
+            <img src="${item.image}" class="w-full h-20 object-cover rounded-lg border border-slate-200 shadow-sm">
+            <button onclick="removeScan(${item.id})" class="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        function removeScan(id) {
+            scannedItems = scannedItems.filter(item => item.id !== id);
+            renderScannedList();
         }
 
         // --- 5. 天気予報 (酒田市日向地区) ---
@@ -1075,6 +1202,46 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // さっきコピーしたURLをここに貼り付けます
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzrE_G2erC0MzXUjROXA28rVMbc_vyLEF3xJji2ZB6MKbpVeQ_e_LcGNl4vd_9xVshI/exec';
+
+        /**
+         * 溜まった画像を一枚ずつGASに送る魔法の関数
+         */
+        async function processImagesWithAI() {
+            const total = scannedItems.length;
+            showAILoading(total); // ローディング画面表示
+
+            for (let i = 0; i < total; i++) {
+                const item = scannedItems[i];
+
+                // 進捗を更新
+                updateAIProgress(i + 1, total);
+
+                try {
+                    // base64データから純粋なデータ部分のみ抽出
+                    const base64Data = item.image.split(',')[1];
+
+                    const response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ image: base64Data })
+                    });
+
+                    const result = await response.json();
+                    console.log(`解析結果(${i + 1}枚目):`, result);
+
+                } catch (error) {
+                    console.error(`${i + 1}枚目の解析に失敗しました:`, error);
+                }
+            }
+
+            // 全て終わったらリセットして隠す
+            scannedItems = [];
+            renderScannedList();
+            hideAILoading();
+            alert('全ての荷受票の解析と保存が完了しました！');
         }
 
         async function loadDashboardStats() {
