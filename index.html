@@ -1205,12 +1205,12 @@
         }
 
         // GASのWebアプリURL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz_0g4c_XRcRpWmqHRDDg8-yYA5FjZ4UeOFJ6PXaOLEc0J5UVs4_6rfyCEJbwU-rNMQ/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwNBgJNrkZ9xaTYrPtVeYzEl9Sy0dbYeOAaRtWgUIEvJPxxFuXSacxB_ltD5ZDmaGg/exec';
 
         /** * 溜まった画像を一枚ずつGASに送る関数 */
         async function processImagesWithAI() {
             const total = scannedItems.length;
-            showAILoading(total); 
+            showAILoading(total);
 
             for (let i = 0; i < total; i++) {
                 const item = scannedItems[i];
