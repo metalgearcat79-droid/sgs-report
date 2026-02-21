@@ -1205,7 +1205,7 @@
         }
 
         // GASのWebアプリURL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9LjRH3peptJr9A59T07Lu9jREOKMoJFTX1nil9bGPPBgFXdKNRtEZWWwrm-AnQPZW/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby2LzLLBm5HAHjc2WsqKnPGPJpkehZ_HnxIctUOhrqlJYKWsZtOgkpevW3yS10tcytJ/exec';
 
         /** * 溜まった画像を一枚ずつGASに送る関数 */
         async function processImagesWithAI() {
@@ -1224,6 +1224,9 @@
 
                     const response = await fetch(GAS_URL, {
                         method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({ image: base64Data })
                     });
 
